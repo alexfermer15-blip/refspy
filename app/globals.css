@@ -1,0 +1,460 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* =================== BASE ANIMATIONS =================== */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out both;
+}
+
+/* =================== HOVER EFFECTS =================== */
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255, 107, 0, 0.3);
+}
+
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.5),
+              0 0 40px rgba(255, 107, 0, 0.3);
+  border-color: #ff6b00;
+}
+
+/* =================== ADVANCED ANIMATIONS =================== */
+
+/* 1. GLITCH EFFECT */
+.glitch {
+  position: relative;
+  animation: glitch-anim 5s infinite;
+}
+
+@keyframes glitch-anim {
+  0%, 90%, 100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(-3px, 3px);
+  }
+  94% {
+    transform: translate(3px, -3px);
+  }
+  96% {
+    transform: translate(-3px, -3px);
+  }
+  98% {
+    transform: translate(3px, 3px);
+  }
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.glitch::before {
+  left: 3px;
+  text-shadow: -3px 0 #ff6b00;
+  animation: glitch-anim-2 0.5s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+}
+
+.glitch::after {
+  left: -3px;
+  text-shadow: 3px 0 #00ff41;
+  animation: glitch-anim-3 0.4s infinite;
+  clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); }
+  20% { clip-path: polygon(0 40%, 100% 40%, 100% 60%, 0 60%); }
+  40% { clip-path: polygon(0 20%, 100% 20%, 100% 80%, 0 80%); }
+  60% { clip-path: polygon(0 80%, 100% 80%, 100% 90%, 0 90%); }
+  80% { clip-path: polygon(0 10%, 100% 10%, 100% 50%, 0 50%); }
+  100% { clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); }
+}
+
+@keyframes glitch-anim-3 {
+  0% { clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%); }
+  25% { clip-path: polygon(0 30%, 100% 30%, 100% 70%, 0 70%); }
+  50% { clip-path: polygon(0 10%, 100% 10%, 100% 90%, 0 90%); }
+  75% { clip-path: polygon(0 5%, 100% 5%, 100% 40%, 0 40%); }
+  100% { clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%); }
+}
+
+/* 2. NEON GLOW PULSE */
+.neon-glow {
+  animation: neon-pulse 3s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(255, 107, 0, 0.8),
+               0 0 20px rgba(255, 107, 0, 0.6),
+               0 0 30px rgba(255, 107, 0, 0.4),
+               0 0 40px rgba(255, 107, 0, 0.2);
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255, 107, 0, 0.8),
+                 0 0 20px rgba(255, 107, 0, 0.6),
+                 0 0 30px rgba(255, 107, 0, 0.4);
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 107, 0, 1),
+                 0 0 30px rgba(255, 107, 0, 0.8),
+                 0 0 40px rgba(255, 107, 0, 0.6),
+                 0 0 50px rgba(255, 107, 0, 0.4),
+                 0 0 60px rgba(255, 107, 0, 0.2);
+    filter: brightness(1.2);
+  }
+}
+
+/* 3. SCAN LINE EFFECT */
+.scan-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.9), transparent);
+  animation: scan 4s linear infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(600px);
+  }
+}
+
+/* 4. HOLOGRAM EFFECT */
+.hologram {
+  position: relative;
+  overflow: hidden;
+}
+
+.hologram::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 255, 255, 0.05) 0px,
+    rgba(0, 255, 255, 0.05) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  animation: hologram-move 2s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes hologram-move {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(4px);
+  }
+}
+
+/* 5. 3D CARD TRANSFORM */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.card-3d:hover {
+  transform: perspective(1000px) rotateY(5deg) rotateX(3deg) scale(1.03);
+}
+
+/* 6. PULSE RING */
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border: 2px solid #ff6b00;
+  border-radius: inherit;
+  animation: pulse-ring-anim 2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-ring-anim {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* 7. SHIMMER EFFECT */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer-anim 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer-anim {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+/* 8. GLOWING BORDER */
+.glow-border {
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #ff6b00, #ff4500, #ff8c00, #ff6b00);
+  background-size: 400%;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.5s;
+  animation: rotate-gradient 4s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.glow-border:hover::before {
+  opacity: 1;
+}
+
+@keyframes rotate-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 9. ANIMATED GRADIENT */
+.animated-gradient {
+  background: linear-gradient(
+    45deg,
+    #ff6b00,
+    #ff8c00,
+    #ff6b00,
+    #ff4500
+  );
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 10. FLOAT ANIMATION */
+.float-animation {
+  animation: float-anim 4s ease-in-out infinite;
+}
+
+@keyframes float-anim {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* 11. BOUNCE IN */
+.bounce-in {
+  animation: bounce-in-anim 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounce-in-anim {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 12. TYPING ANIMATION */
+.typing-animation {
+  overflow: hidden;
+  border-right: 3px solid #ff6b00;
+  white-space: nowrap;
+  animation: typing 3s steps(40) forwards, blink 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+/* 13. PARTICLE EFFECT */
+.particles-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(255, 107, 0, 0.6);
+  border-radius: 50%;
+  animation: particle-float 15s linear infinite;
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translate(0, 100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), -100vh) scale(1);
+    opacity: 0;
+  }
+}
+
+/* 14. CYBER GRID */
+.cyber-grid {
+  background-image: 
+    linear-gradient(rgba(255, 107, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 107, 0, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: grid-scroll 20s linear infinite;
+}
+
+@keyframes grid-scroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+/* 15. SCALE PULSE */
+.scale-pulse {
+  animation: scale-pulse-anim 2s ease-in-out infinite;
+}
+
+@keyframes scale-pulse-anim {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
