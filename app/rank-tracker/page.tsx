@@ -3,33 +3,7 @@
 import { useEffect, useState } from 'react'
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Plus, Trash2, BarChart3, Download } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import dynamic from 'next/dynamic'
 import { KeywordHistoryChart } from '@/components/rank-tracker/KeywordHistoryChart'
-
-// Динамический импорт PDF компонента для избежания SSR проблем
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
-  { 
-    ssr: false,
-    loading: () => (
-      <button className="px-4 py-2 bg-orange-500 text-white rounded-lg opacity-50 cursor-not-allowed">
-        Loading PDF...
-      </button>
-    ),
-  }
-)
-
-// Динамический импорт PDF документа
-const KeywordsPDFReport = dynamic(
-  () => import('@/components/pdf/KeywordsPDFReport').then(mod => mod.KeywordsPDFReport),
-  { ssr: false }
-)
-
-// Импортируем типы из PDF компонента
-import type { 
-  Keyword as PDFKeyword, 
-  KeywordStats as PDFKeywordStats 
-} from '@/components/pdf/KeywordsPDFReport'
 
 // Локальные типы для страницы
 interface Keyword {
@@ -57,23 +31,6 @@ interface KeywordStats {
   declined: number
 }
 
-// Функция конвертации данных для PDF
-const convertKeywordToPDF = (keyword: Keyword): PDFKeyword => {
-  return {
-    id: keyword.id,
-    keyword: keyword.keyword,
-    url: keyword.target_url || '',
-    position: keyword.current_position || 0,
-    change: keyword.current_position && keyword.previous_position 
-      ? keyword.previous_position - keyword.current_position 
-      : 0,
-    search_engine: 'google' as const,
-    status: keyword.current_position ? 'active' as const : 'inactive' as const,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-}
-
 export default function RankTrackerPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<string>('')
@@ -82,12 +39,6 @@ export default function RankTrackerPage() {
   const [checking, setChecking] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [newKeyword, setNewKeyword] = useState('')
-  const [showExportMenu, setShowExportMenu] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   useEffect(() => {
     fetchProjects()
@@ -244,11 +195,6 @@ export default function RankTrackerPage() {
     return { total, active, in_top_3, improved, declined }
   }
 
-  const stats = calculateStats()
-  const currentProject = projects.find(p => p.id === selectedProject)
-  const pdfKeywords: PDFKeyword[] = keywords.map(convertKeywordToPDF)
-  const pdfStats: PDFKeywordStats = stats
-
   const exportToCSV = () => {
     const headers = ['Keyword', 'Position', 'Change', 'Best Position', 'Volume', 'Difficulty', 'URL']
     const rows = keywords.map(k => [
@@ -274,6 +220,8 @@ export default function RankTrackerPage() {
     link.download = `refspy_keywords_${new Date().toISOString().split('T')[0]}.csv`
     link.click()
   }
+
+  const stats = calculateStats()
 
   if (loading) {
     return (
@@ -321,52 +269,13 @@ export default function RankTrackerPage() {
                     Check All
                   </button>
 
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowExportMenu(!showExportMenu)}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Export
-                    </button>
-
-                    {showExportMenu && (
-                      <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-10">
-                        {isClient && (
-                          <PDFDownloadLink
-                            document={
-                              <KeywordsPDFReport
-                                keywords={pdfKeywords}
-                                stats={pdfStats}
-                                projectName={currentProject?.name}
-                              />
-                            }
-                            fileName={`refspy_keywords_${new Date().toISOString().split('T')[0]}.pdf`}
-                            className="block px-4 py-2 text-white hover:bg-gray-800"
-                            onClick={() => setShowExportMenu(false)}
-                          >
-                            {({ loading }) => (
-                              <div className="flex items-center gap-2">
-                                <Download className="w-4 h-4" />
-                                {loading ? 'Generating...' : 'Export to PDF'}
-                              </div>
-                            )}
-                          </PDFDownloadLink>
-                        )}
-
-                        <button
-                          onClick={() => {
-                            exportToCSV()
-                            setShowExportMenu(false)
-                          }}
-                          className="w-full text-left px-4 py-2 text-white hover:bg-gray-800 flex items-center gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          Export to CSV
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    onClick={exportToCSV}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export to CSV
+                  </button>
                 </>
               )}
 
@@ -576,13 +485,6 @@ export default function RankTrackerPage() {
               </div>
             </div>
           </div>
-        )}
-
-        {showExportMenu && (
-          <div
-            className="fixed inset-0 z-0"
-            onClick={() => setShowExportMenu(false)}
-          />
         )}
       </div>
     </ProtectedRoute>

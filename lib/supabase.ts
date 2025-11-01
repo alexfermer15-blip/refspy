@@ -1,5 +1,3 @@
-// lib/supabase.ts
-
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://dgwfsazdcuukkbudlvvu.supabase.co'
@@ -21,7 +19,6 @@ export const projectsAPI = {
     console.log('📦 Input project data:', project)
     
     try {
-      // Проверяем auth
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
       console.log('👤 Auth user:', authUser)
       console.log('👤 Auth error:', authError)
@@ -49,7 +46,6 @@ export const projectsAPI = {
         console.error('  - details:', error.details)
         console.error('  - hint:', error.hint)
         
-        // Проверим RLS
         if (error.message && (error.message.includes('row-level security') || error.message.includes('permission denied'))) {
           console.error('🔒 RLS POLICY VIOLATION!')
           console.error('💡 Solution: Disable RLS with: ALTER TABLE projects DISABLE ROW LEVEL SECURITY;')
@@ -373,6 +369,320 @@ export const usersAPI = {
       .eq('id', id)
 
     if (error) throw error
+  }
+}
+
+// ===========================
+// SETTINGS API
+// ===========================
+
+export const settingsAPI = {
+  async get(key: string) {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('key', key)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      throw error
+    }
+
+    return data
+  },
+
+  async update(key: string, value: any) {
+    const { data, error } = await supabase
+      .from('settings')
+      .update({ value })
+      .eq('key', key)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async getAll() {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+
+    if (error) throw error
+    return data || []
+  },
+
+  async create(key: string, value: any) {
+    const { data, error } = await supabase
+      .from('settings')
+      .insert([{ key, value }])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async delete(key: string) {
+    const { error } = await supabase
+      .from('settings')
+      .delete()
+      .eq('key', key)
+
+    if (error) throw error
+  }
+}
+
+// ===========================
+// ACTIVITY LOGS API
+// ===========================
+
+export const activityLogsAPI = {
+  async create(log: any) {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .insert([log])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async getAll() {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getByUser(userId: string) {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getByProject(projectId: string) {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getRecent(limit: number = 10) {
+    try {
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select('*, users(*)')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting recent activity:', error)
+      return []
+    }
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('activity_logs')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  }
+}
+
+// ===========================
+// PAYMENTS API
+// ===========================
+
+export const paymentsAPI = {
+  async create(payment: any) {
+    const { data, error } = await supabase
+      .from('payments')
+      .insert([payment])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async getAll() {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getByUser(userId: string) {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getByProject(projectId: string) {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getStats() {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('amount, created_at')
+
+      if (error) throw error
+      
+      const total = data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
+      
+      // Расчёт месячной выручки
+      const now = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      const monthlyRevenue = data?.reduce((sum, p) => {
+        if (new Date(p.created_at) >= monthStart) {
+          return sum + (p.amount || 0)
+        }
+        return sum
+      }, 0) || 0
+
+      return { total, monthlyRevenue }
+    } catch (error) {
+      console.error('Error getting payment stats:', error)
+      return { total: 0, monthlyRevenue: 0 }
+    }
+  },
+
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('payments')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  }
+}
+
+// ===========================
+// INTEGRATIONS API
+// ===========================
+
+export const integrationsAPI = {
+  async create(integration: any) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .insert([integration])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async getAll() {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getByUser(userId: string) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getByProject(projectId: string) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('integrations')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  },
+
+  async getByType(type: string) {
+    const { data, error } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('type', type)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
   }
 }
 

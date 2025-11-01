@@ -15,7 +15,6 @@
     "load:proxies": "tsx scripts/load-proxies.ts"
   },
   "dependencies": {
-    "@react-pdf/renderer": "^4.3.1",
     "@stripe/stripe-js": "^8.0.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
