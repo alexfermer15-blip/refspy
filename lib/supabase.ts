@@ -1,7 +1,13 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://dgwfsazdcuukkbudlvvu.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnd2ZzYXpkY3V1a2tidWRsdnZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxOTg3NDcsImV4cCI6MjA3NTc3NDc0N30.5Pw4UL_uBa4ZI_ZPBum3Mtb8ccxqBjsBi-BLlsyO7Ic'
+// Используй переменные окружения вместо hardcoded ключей!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dgwfsazdcuukkbudlvvu.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnd2ZzYXpkY3V1a2tidWRsdnZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxOTg3NDcsImV4cCI6MjA3NTc3NDc0N30.5Pw4UL_uBa4ZI_ZPBum3Mtb8ccxqBjsBi-BLlsyO7Ic'
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('⚠️ Supabase environment variables not configured properly')
+}
 
 export function createClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey)
@@ -566,7 +572,6 @@ export const paymentsAPI = {
       
       const total = data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
       
-      // Расчёт месячной выручки
       const now = new Date()
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
       const monthlyRevenue = data?.reduce((sum, p) => {
