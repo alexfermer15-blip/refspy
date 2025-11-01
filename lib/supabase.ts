@@ -1,12 +1,40 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-// Используй переменные окружения вместо hardcoded ключей!
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dgwfsazdcuukkbudlvvu.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnd2ZzYXpkY3V1a2tidWRsdnZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxOTg3NDcsImV4cCI6MjA3NTc3NDc0N30.5Pw4UL_uBa4ZI_ZPBum3Mtb8ccxqBjsBi-BLlsyO7Ic'
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('⚠️ Supabase environment variables not configured properly')
+}
+
+// 🔧 Очистка потенциально повреждённых tokens при загрузке страницы
+if (typeof window !== 'undefined') {
+  try {
+    // Очисти localStorage если есть старые tokens
+    const keys = Object.keys(localStorage)
+    keys.forEach(key => {
+      if (key.includes('supabase') || key.includes('auth')) {
+        try {
+          const stored = localStorage.getItem(key)
+          if (stored) {
+            const parsed = JSON.parse(stored)
+            // Если token выглядит невалидным, удали его
+            if (parsed?.access_token === undefined && parsed?.refresh_token === undefined) {
+              localStorage.removeItem(key)
+              console.log(`🧹 Cleaned invalid token: ${key}`)
+            }
+          }
+        } catch (e) {
+          // Если не можешь распарсить - удали
+          localStorage.removeItem(key)
+          console.log(`🧹 Cleaned corrupted token: ${key}`)
+        }
+      }
+    })
+  } catch (e) {
+    console.log('Token cleanup skipped')
+  }
 }
 
 export function createClient() {
@@ -38,25 +66,15 @@ export const projectsAPI = {
       console.log('📊 Raw Supabase response:')
       console.log('  - data:', data)
       console.log('  - error:', error)
-      console.log('  - error type:', typeof error)
-      console.log('  - error is null?:', error === null)
       
-      if (error) {
-        console.log('  - error stringified:', JSON.stringify(error, null, 2))
-      }
-
       if (error) {
         console.error('❌ Error detected!')
         console.error('  - message:', error.message)
         console.error('  - code:', error.code)
-        console.error('  - details:', error.details)
-        console.error('  - hint:', error.hint)
         
-        if (error.message && (error.message.includes('row-level security') || error.message.includes('permission denied'))) {
+        if (error.message?.includes('row-level security') || error.message?.includes('permission denied')) {
           console.error('🔒 RLS POLICY VIOLATION!')
-          console.error('💡 Solution: Disable RLS with: ALTER TABLE projects DISABLE ROW LEVEL SECURITY;')
         }
-        
         throw error
       }
 
@@ -64,11 +82,6 @@ export const projectsAPI = {
       return data
     } catch (err: any) {
       console.error('❌ CATCH BLOCK ERROR:', err)
-      console.error('❌ Error type:', typeof err)
-      console.error('❌ Error constructor:', err?.constructor?.name)
-      console.error('❌ Error keys:', Object.keys(err || {}))
-      console.error('❌ Error message:', err?.message)
-      console.error('❌ Error stack:', err?.stack)
       throw err
     }
   },
